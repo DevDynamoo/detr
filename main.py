@@ -24,7 +24,7 @@ def get_args_parser():
     parser.add_argument("--overfit", action="store_true")
     parser.add_argument("--lr", default=1e-4, type=float)
     parser.add_argument("--lr_backbone", default=1e-5, type=float)
-    parser.add_argument("--batch_size", default=2, type=int)
+    parser.add_argument("--batch_size", default=16, type=int)
     parser.add_argument("--weight_decay", default=1e-4, type=float)
     parser.add_argument("--epochs", default=300, type=int)
     parser.add_argument("--lr_drop", default=200, type=int)
@@ -106,11 +106,13 @@ def get_args_parser():
     parser.add_argument("--resume", default="", help="resume from checkpoint")
     parser.add_argument("--start_epoch", default=0, type=int, metavar="N", help="start epoch")
     parser.add_argument("--eval", action="store_true")
-    parser.add_argument("--num_workers", default=2, type=int)
+    parser.add_argument("--num_workers", default=0, type=int)
 
     # distributed training parameters
     parser.add_argument("--world_size", default=1, type=int, help="number of distributed processes")
     parser.add_argument("--dist_url", default="env://", help="url used to set up distributed training")
+    parser.add_argument("--lm_path", default="/content/gdrive/MyDrive/lm", help="Path for dataloader")
+
     return parser
 
 
@@ -178,32 +180,32 @@ def main(args):
     # )
 
     params = dict(
-        data_dir="data/processed/mros/ar",
+        data_dir=args.lm_path,
         batch_size=args.batch_size,
-        n_eval=0,
-        n_test=0,
+        n_eval=2,
+        n_test=2,
         num_workers=args.num_workers,
         seed=1337,
-        events={"ar": "Arousal"},
+        events={"lm": "Leg movement"},
         window_duration=600,  # seconds
         cache_data=True,
         default_event_window_duration=[15],
         event_buffer_duration=3,
         factor_overlap=2,
-        fs=128,
+        fs=64,
         matching_overlap=0.5,
         n_jobs=-1,
-        n_records=1,
+        n_records=10,
         overfit=args.overfit,
-        picks=["c3", "c4", "eogl", "eogr", "chin"],
+        picks=["legl", "legr"],
         # transform=MultitaperTransform(128, 0.5, 35.0, tw=8.0, normalize=True),
         transform=STFTTransform(
-            fs=128, segment_size=int(4.0 * 128), step_size=int(0.125 * 128), nfft=1024, normalize=True
+            fs=64, segment_size=int(4.0 * 64), step_size=int(0.125 * 64), nfft=1024, normalize=True
         ),
         scaling="robust",
     )
     dm = SleepEventDataModule(**params)
-    dm.setup()
+    dm.setup('fit')
     data_loader_train = dm.train_dataloader()
     data_loader_val = dm.val_dataloader()
 
