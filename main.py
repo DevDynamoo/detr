@@ -178,32 +178,32 @@ def main(args):
     # )
 
     params = dict(
-        data_dir="data/processed/mros/ar",
-        batch_size=args.batch_size,
-        n_eval=0,
-        n_test=0,
-        num_workers=args.num_workers,
+        data_dir="/content/gdrive/MyDrive/lm",
+        batch_size=16,
+        n_eval=2,
+        n_test=2,
+        num_workers=0,
         seed=1337,
-        events={"ar": "Arousal"},
+        events={"lm": "Leg movement"},
         window_duration=600,  # seconds
         cache_data=True,
         default_event_window_duration=[15],
         event_buffer_duration=3,
         factor_overlap=2,
-        fs=128,
+        fs=64,
         matching_overlap=0.5,
         n_jobs=-1,
-        n_records=1,
+        n_records=10,
         overfit=args.overfit,
-        picks=["c3", "c4", "eogl", "eogr", "chin"],
+        picks=["legl", "legr"],
         # transform=MultitaperTransform(128, 0.5, 35.0, tw=8.0, normalize=True),
         transform=STFTTransform(
-            fs=128, segment_size=int(4.0 * 128), step_size=int(0.125 * 128), nfft=1024, normalize=True
+            fs=64, segment_size=int(4.0 * 64), step_size=int(0.125 * 64), nfft=1024, normalize=True
         ),
         scaling="robust",
     )
     dm = SleepEventDataModule(**params)
-    dm.setup()
+    dm.setup('fit')
     data_loader_train = dm.train_dataloader()
     data_loader_val = dm.val_dataloader()
 
